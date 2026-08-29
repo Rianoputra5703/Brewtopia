@@ -344,7 +344,7 @@ export default function Landing() {
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover object-[70%_center] sm:object-center"
               >
                 <source src={cafeInfo.banner_video_url} type="video/mp4" />
               </video>
@@ -352,7 +352,7 @@ export default function Landing() {
               <img
                 src={cafeInfo.banner_url}
                 alt="Banner"
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover object-[70%_center] sm:object-center"
               />
             ) : (
               <div
@@ -794,9 +794,9 @@ export default function Landing() {
         </div>
       </footer>
 
-      {/* ==================== DRAWER DETAIL MENU (slide dari bawah) ==================== */}
+      {/* ==================== MODAL DETAIL MENU (muncul di tengah, fade + zoom) ==================== */}
       {selectedMenu && (
-        <div className="fixed inset-0 z-[100]">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
           <div
             className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${
               drawerVisible ? 'opacity-100' : 'opacity-0'
@@ -805,21 +805,18 @@ export default function Landing() {
           />
 
           <div
-            className={`absolute left-0 right-0 bottom-0 bg-white rounded-t-2xl max-w-md mx-auto w-full max-h-[85vh] overflow-y-auto transition-transform duration-300 ease-out ${
-              drawerVisible ? 'translate-y-0' : 'translate-y-full'
+            className={`relative bg-white rounded-2xl max-w-md w-full max-h-[85vh] overflow-y-auto transition-all duration-300 ease-out ${
+              drawerVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
             }`}
           >
-            <div className="sticky top-0 bg-white flex justify-center pt-3 pb-1">
-              <div className="w-10 h-1.5 rounded-full bg-gray-200" />
-              <button
-                onClick={closeMenuDetail}
-                className="absolute right-3 top-3 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"
-              >
-                <X size={16} className="theme-text-dark" />
-              </button>
-            </div>
+            <button
+              onClick={closeMenuDetail}
+              className="absolute right-3 top-3 z-10 w-8 h-8 rounded-full bg-white/90 shadow flex items-center justify-center hover:bg-gray-100"
+            >
+              <X size={16} className="theme-text-dark" />
+            </button>
 
-            <div className="aspect-[16/10] bg-gray-100 mt-2">
+            <div className="aspect-[16/10] bg-gray-100 rounded-t-2xl overflow-hidden">
               {selectedMenu.image_url ? (
                 <img
                   src={selectedMenu.image_url}
@@ -833,7 +830,7 @@ export default function Landing() {
               )}
             </div>
 
-            <div className="p-5 pb-8">
+            <div className="p-5 pb-6">
               <p className="text-lg font-semibold theme-text-dark mb-2">{selectedMenu.name}</p>
               <p className="text-sm text-gray-500 leading-relaxed mb-4">
                 {selectedMenu.description || 'Belum ada deskripsi untuk menu ini.'}

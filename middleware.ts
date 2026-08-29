@@ -11,21 +11,17 @@
 // 2. Di Vercel Dashboard → project → Settings → Environment Variables,
 //    tambahkan 2 variable ini:
 //      SUPABASE_URL       = https://xxxxx.supabase.co
-//      SUPABASE_ANON_KEY  = (anon/public "Legacy" key project Supabase,
-//                            diawali "eyJhbGci...", BUKAN yang format
-//                            "sb_publishable_..." dari sistem key baru)
+//      SUPABASE_ANON_KEY  = anon/public key project Supabase, format
+//                            "Legacy" yang diawali "eyJhbGci..."
+//                            (BUKAN format baru "sb_publishable_...").
+//                            Ambil di Supabase Dashboard > Project
+//                            Settings > API > "Legacy API Keys".
 // 3. Middleware ini TIDAK jalan kalau cuma `npm run dev` (itu Vite
-//    dev server biasa). Untuk tes, deploy dulu ke Vercel.
-//
-// CATATAN DEBUG: middleware ini sementara punya console.log/console.error
-// tambahan untuk melacak kenapa data SEO dari Supabase belum muncul di
-// preview link. Cek Vercel → Logs setelah request dari bot untuk melihat
-// baris yang diawali "DEBUG". Hapus baris-baris DEBUG ini setelah
-// masalahnya ketemu dan selesai diperbaiki.
+//    dev server biasa). Untuk tes, deploy dulu ke Vercel, lalu cek
+//    lewat Facebook Sharing Debugger atau opengraph.xyz — JANGAN
+//    langsung tes ke WhatsApp karena WA suka nyimpen cache lama.
 // ==================================================================
 
-// Memberi tahu TypeScript bentuk minimal "process.env" tanpa perlu
-// menginstall paket @types/node — cukup untuk kebutuhan file ini saja.
 declare const process: { env: Record<string, string | undefined> }
 
 export const config = {
@@ -44,10 +40,6 @@ export default async function middleware(request: Request) {
 
   const SUPABASE_URL = process.env.SUPABASE_URL
   const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY
-
-  console.log('DEBUG userAgent:', userAgent)
-  console.log('DEBUG SUPABASE_URL exists:', Boolean(SUPABASE_URL))
-  console.log('DEBUG SUPABASE_ANON_KEY exists:', Boolean(SUPABASE_ANON_KEY))
 
   let title = 'Coffee Shop'
   let description = ''
@@ -71,12 +63,7 @@ export default async function middleware(request: Request) {
         }),
       ])
 
-      console.log('DEBUG seoRes status:', seoRes.status)
-      console.log('DEBUG cafeRes status:', cafeRes.status)
-
       const seoData = await seoRes.json()
-      console.log('DEBUG seoData:', JSON.stringify(seoData))
-
       if (seoData?.[0]?.value) {
         const parsed = JSON.parse(seoData[0].value)
         title = parsed.title || title
@@ -85,21 +72,14 @@ export default async function middleware(request: Request) {
       }
 
       const cafeData = await cafeRes.json()
-      console.log('DEBUG cafeData:', JSON.stringify(cafeData))
-
       if (cafeData?.[0]?.name) {
         cafeName = cafeData[0].name
         if (!title || title === 'Coffee Shop') title = cafeName
       }
-    } else {
-      console.log('DEBUG: SUPABASE_URL atau SUPABASE_ANON_KEY kosong, pakai nilai default.')
     }
-  } catch (e: any) {
-    console.error('DEBUG MIDDLEWARE ERROR:', e?.message)
+  } catch (e) {
+    // kalau Supabase gagal diakses, tetap balas HTML dengan nilai default
   }
-
-  console.log('DEBUG final title:', title)
-  console.log('DEBUG final image:', image)
 
   const pageUrl = request.url
 
