@@ -5,11 +5,15 @@
 //
 // SETUP (dilakukan SEKALI per project Vercel, bukan tiap ganti data):
 // 1. File ini WAJIB ditaruh di ROOT project (sejajar package.json),
-//    namanya harus persis "middleware.js" — bukan di dalam folder src.
+//    namanya harus persis "middleware.ts" — bukan di dalam folder src,
+//    dan jangan ada file "middleware.js" lain di root pada saat
+//    bersamaan (Vercel hanya boleh punya SATU file middleware).
 // 2. Di Vercel Dashboard → project → Settings → Environment Variables,
 //    tambahkan 2 variable ini:
 //      SUPABASE_URL       = https://xxxxx.supabase.co
-//      SUPABASE_ANON_KEY  = (anon/public key project Supabase)
+//      SUPABASE_ANON_KEY  = (anon/public "Legacy" key project Supabase,
+//                            diawali "eyJhbGci...", BUKAN yang format
+//                            "sb_publishable_..." dari sistem key baru)
 // 3. Middleware ini TIDAK jalan kalau cuma `npm run dev` (itu Vite
 //    dev server biasa). Untuk tes, deploy dulu ke Vercel.
 //
@@ -20,6 +24,10 @@
 // masalahnya ketemu dan selesai diperbaiki.
 // ==================================================================
 
+// Memberi tahu TypeScript bentuk minimal "process.env" tanpa perlu
+// menginstall paket @types/node — cukup untuk kebutuhan file ini saja.
+declare const process: { env: Record<string, string | undefined> }
+
 export const config = {
   matcher: '/((?!api|assets|.*\\.(?:png|jpg|jpeg|gif|svg|css|js|ico|woff2?)$).*)',
 }
@@ -27,7 +35,7 @@ export const config = {
 const BOT_UA_REGEX =
   /facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|redditbot|vkShare|SkypeUriPreview|line-poker/i
 
-export default async function middleware(request) {
+export default async function middleware(request: Request) {
   const userAgent = request.headers.get('user-agent') || ''
 
   if (!BOT_UA_REGEX.test(userAgent)) {
@@ -86,8 +94,8 @@ export default async function middleware(request) {
     } else {
       console.log('DEBUG: SUPABASE_URL atau SUPABASE_ANON_KEY kosong, pakai nilai default.')
     }
-  } catch (e) {
-    console.error('DEBUG MIDDLEWARE ERROR:', e.message)
+  } catch (e: any) {
+    console.error('DEBUG MIDDLEWARE ERROR:', e?.message)
   }
 
   console.log('DEBUG final title:', title)
@@ -125,12 +133,13 @@ ${image ? `<meta name="twitter:image" content="${escapeHtml(image)}" />` : ''}
   })
 }
 
-function escapeHtml(str) {
-  return String(str || '').replace(/[&<>"']/g, (c) => ({
+function escapeHtml(str: string): string {
+  const map: Record<string, string> = {
     '&': '&amp;',
     '<': '&lt;',
     '>': '&gt;',
     '"': '&quot;',
     "'": '&#39;',
-  }[c]))
+  }
+  return String(str || '').replace(/[&<>"']/g, (c) => map[c])
 }
