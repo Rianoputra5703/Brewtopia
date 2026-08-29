@@ -12,6 +12,12 @@
 //      SUPABASE_ANON_KEY  = (anon/public key project Supabase)
 // 3. Middleware ini TIDAK jalan kalau cuma `npm run dev` (itu Vite
 //    dev server biasa). Untuk tes, deploy dulu ke Vercel.
+//
+// CATATAN DEBUG: middleware ini sementara punya console.log/console.error
+// tambahan untuk melacak kenapa data SEO dari Supabase belum muncul di
+// preview link. Cek Vercel → Logs setelah request dari bot untuk melihat
+// baris yang diawali "DEBUG". Hapus baris-baris DEBUG ini setelah
+// masalahnya ketemu dan selesai diperbaiki.
 // ==================================================================
 
 export const config = {
@@ -30,6 +36,10 @@ export default async function middleware(request) {
 
   const SUPABASE_URL = process.env.SUPABASE_URL
   const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY
+
+  console.log('DEBUG userAgent:', userAgent)
+  console.log('DEBUG SUPABASE_URL exists:', Boolean(SUPABASE_URL))
+  console.log('DEBUG SUPABASE_ANON_KEY exists:', Boolean(SUPABASE_ANON_KEY))
 
   let title = 'Coffee Shop'
   let description = ''
@@ -53,7 +63,12 @@ export default async function middleware(request) {
         }),
       ])
 
+      console.log('DEBUG seoRes status:', seoRes.status)
+      console.log('DEBUG cafeRes status:', cafeRes.status)
+
       const seoData = await seoRes.json()
+      console.log('DEBUG seoData:', JSON.stringify(seoData))
+
       if (seoData?.[0]?.value) {
         const parsed = JSON.parse(seoData[0].value)
         title = parsed.title || title
@@ -62,14 +77,21 @@ export default async function middleware(request) {
       }
 
       const cafeData = await cafeRes.json()
+      console.log('DEBUG cafeData:', JSON.stringify(cafeData))
+
       if (cafeData?.[0]?.name) {
         cafeName = cafeData[0].name
         if (!title || title === 'Coffee Shop') title = cafeName
       }
+    } else {
+      console.log('DEBUG: SUPABASE_URL atau SUPABASE_ANON_KEY kosong, pakai nilai default.')
     }
   } catch (e) {
-    // kalau Supabase gagal diakses, tetap balas HTML dengan nilai default
+    console.error('DEBUG MIDDLEWARE ERROR:', e.message)
   }
+
+  console.log('DEBUG final title:', title)
+  console.log('DEBUG final image:', image)
 
   const pageUrl = request.url
 
