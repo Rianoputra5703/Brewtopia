@@ -29,7 +29,7 @@ export const config = {
 }
 
 const BOT_UA_REGEX =
-  /facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|redditbot|vkShare|SkypeUriPreview|line-poker/i
+  /facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|Pinterest|redditbot|vkShare|SkypeUriPreview|line-poker|Googlebot|Bingbot|DuckDuckBot|Baiduspider|YandexBot|Applebot/i
 
 export default async function middleware(request: Request) {
   const userAgent = request.headers.get('user-agent') || ''
@@ -63,12 +63,7 @@ export default async function middleware(request: Request) {
         }),
       ])
 
-      console.log('DEBUG seoRes.status:', seoRes.status)
-      console.log('DEBUG cafeRes.status:', cafeRes.status)
-
       const seoData = await seoRes.json()
-      console.log('DEBUG seoData:', JSON.stringify(seoData))
-
       if (seoData?.[0]?.value) {
         const parsed = JSON.parse(seoData[0].value)
         title = parsed.title || title
@@ -77,17 +72,13 @@ export default async function middleware(request: Request) {
       }
 
       const cafeData = await cafeRes.json()
-      console.log('DEBUG cafeData:', JSON.stringify(cafeData))
-
       if (cafeData?.[0]?.name) {
         cafeName = cafeData[0].name
         if (!title || title === 'Coffee Shop') title = cafeName
       }
-    } else {
-      console.log('DEBUG: SUPABASE_URL atau SUPABASE_ANON_KEY tidak terbaca dari environment variable.')
     }
-  } catch (e: any) {
-    console.error('DEBUG MIDDLEWARE ERROR:', e?.message)
+  } catch (e) {
+    // kalau Supabase gagal diakses, tetap balas HTML dengan nilai default
   }
 
   const pageUrl = request.url
